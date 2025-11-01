@@ -1,0 +1,7 @@
+{
+  "name": "DevOps & SRE Voice Interview Coach",
+  "description": "An AI-powered voice interview simulator to practice for DevOps and SRE roles. Get real-time feedback on your communication, technical answers, and overall performance.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
