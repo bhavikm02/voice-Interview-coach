@@ -19,6 +19,7 @@ export interface Feedback {
   communication: ScoreAndComment;
   answering: ScoreAndComment;
   flow: ScoreAndComment;
+  technical: ScoreAndComment;
 }
 
 export interface Transcript {
@@ -35,6 +36,7 @@ export interface AverageScores {
   communication: number;
   answering: number;
   flow: number;
+  technical: number;
 }
 
 export interface InterviewResult {

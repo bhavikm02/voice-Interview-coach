@@ -95,6 +95,7 @@ const FeedbackCard: React.FC<Props> = ({ feedback, isLoading }) => {
         </h3>
         <div className="space-y-4">
             <FeedbackCategory label="Overall" data={feedback.overall} />
+            <FeedbackCategory label="Technical Depth" data={feedback.technical} />
             <FeedbackCategory label="Communication" data={feedback.communication} />
             <FeedbackCategory label="Answering" data={feedback.answering} />
             <FeedbackCategory label="Flow" data={feedback.flow} />

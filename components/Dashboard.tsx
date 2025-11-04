@@ -47,7 +47,7 @@ const TrendChart: React.FC<{ history: InterviewResult[] }> = ({ history }) => {
 };
 
 const ScoreBreakdown: React.FC<{ scores: AverageScores }> = ({ scores }) => {
-  const categories: (keyof Omit<AverageScores, 'overall'>)[] = ['communication', 'answering', 'flow'];
+  const categories: (keyof Omit<AverageScores, 'overall'>)[] = ['technical', 'communication', 'answering', 'flow'];
   return (
     <div className="space-y-4">
       {categories.map(cat => {
@@ -56,7 +56,7 @@ const ScoreBreakdown: React.FC<{ scores: AverageScores }> = ({ scores }) => {
         return (
           <div key={cat}>
             <div className="flex justify-between items-center mb-1 text-sm">
-              <span className="capitalize text-gray-300">{cat}</span>
+              <span className="capitalize text-gray-300">{cat === 'technical' ? 'Technical Depth' : cat}</span>
               <span className="font-semibold text-white">{score.toFixed(1)} / 10</span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2.5">

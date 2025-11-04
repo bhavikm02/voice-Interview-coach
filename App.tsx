@@ -72,7 +72,7 @@ const App: React.FC = () => {
     setInterviewState('finished'); // Move to finished state to show loader
 
     const userResponses = finalTranscripts.filter(t => t.speaker === 'user' && t.feedback);
-    const avgScores: AverageScores = { overall: 0, communication: 0, answering: 0, flow: 0 };
+    const avgScores: AverageScores = { overall: 0, communication: 0, answering: 0, flow: 0, technical: 0 };
 
     if (userResponses.length > 0) {
       userResponses.forEach(({ feedback }) => {
@@ -80,11 +80,13 @@ const App: React.FC = () => {
         avgScores.communication += feedback!.communication.score;
         avgScores.answering += feedback!.answering.score;
         avgScores.flow += feedback!.flow.score;
+        avgScores.technical += feedback!.technical.score;
       });
       avgScores.overall = parseFloat((avgScores.overall / userResponses.length).toFixed(1));
       avgScores.communication = parseFloat((avgScores.communication / userResponses.length).toFixed(1));
       avgScores.answering = parseFloat((avgScores.answering / userResponses.length).toFixed(1));
       avgScores.flow = parseFloat((avgScores.flow / userResponses.length).toFixed(1));
+      avgScores.technical = parseFloat((avgScores.technical / userResponses.length).toFixed(1));
     }
 
     const result: InterviewResult = {
@@ -106,7 +108,7 @@ const App: React.FC = () => {
       const feedbackAnalyses = userResponses.map(t => {
         const fb = t.feedback;
         if (!fb) return null;
-        return `Answer Quality: ${fb.answering.comment}\nResponse Structure: ${fb.flow.comment}`;
+        return `Technical Accuracy: ${fb.technical.comment}\nAnswer Quality: ${fb.answering.comment}\nResponse Structure: ${fb.flow.comment}`;
       }).filter(Boolean).join('\n---\n');
 
       if (feedbackAnalyses) {

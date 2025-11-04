@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, Type } from '@google/genai';
 import type { InterviewConfig, Transcript, Feedback } from '../types';
-import { MicrophoneIcon, StopIcon, BotIcon, UserIcon, ChevronLeftIcon, ChevronRightIcon, RetryIcon, SparklesIcon } from './Icons';
+import { MicrophoneIcon, StopIcon, BotIcon, UserIcon, ChevronLeftIcon, ChevronRightIcon, RetryIcon, SparklesIcon, ClockIcon } from './Icons';
 import FeedbackCard from './FeedbackCard';
 import Loader from './Loader';
 
@@ -37,10 +37,21 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [aiAnswer, setAiAnswer] = useState<string | null>(null);
     const [isAiAnswering, setIsAiAnswering] = useState(false);
+    const [elapsedTime, setElapsedTime] = useState(0);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const mediaStreamRef = useRef<MediaStream | null>(null);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setElapsedTime(prevTime => prevTime + 1);
+        }, 1000);
+
+        return () => {
+            clearInterval(timer);
+        };
+    }, []);
     
     const evaluateResponse = useCallback(async (question: string, answer: string, answerId: number) => {
         setStatus(INTERVIEW_STATUS.ANALYZING);
@@ -59,12 +70,19 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
 
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: `You are an expert DevOps and SRE interview evaluator. Analyze the user's answer to the given interview question. For each of the four categories (Overall, Communication, Answering, Flow), provide: 1. A score from 1 to 10. 2. A detailed, constructive comment on the performance. 3. A specific, actionable tip on how to achieve a perfect 10.
+                contents: `You are an expert DevOps and SRE interview evaluator. Analyze the user's answer to the given interview question. For each of the five categories (Overall, Technical Depth & Accuracy, Communication, Answering, Flow), provide: 1. A score from 1 to 10. 2. A detailed, constructive comment. 3. A specific, actionable tip to get a perfect 10.
 
-                    Interview Question: "${question}"
-                    User's Answer: "${answer}"
+                Evaluation Criteria:
+                - Technical Depth & Accuracy: Assess the factual correctness and depth of the technical knowledge. A score of 1 means the answer is fundamentally incorrect (e.g., "A Pod runs on multiple nodes"). A score of 10 means the answer is 100% accurate, specific, and nuanced (e.g., "A Pod can't span nodes, but a Service can span Pods...").
+                - Communication: Evaluate the clarity and structure of the explanation, not English grammar. Focus on the ability to explain complex technical concepts in simple, direct language.
+                - Answering: Did the user directly answer the question that was asked?
+                - Flow: Was the answer well-structured and easy to follow?
+                - Overall: An overall assessment of the complete answer.
 
-                    Respond ONLY with a JSON object. Do not add any other text or markdown formatting.`,
+                Interview Question: "${question}"
+                User's Answer: "${answer}"
+
+                Respond ONLY with a JSON object. Do not add any other text or markdown formatting.`,
                 config: {
                     responseMimeType: 'application/json',
                     responseSchema: {
@@ -74,8 +92,9 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
                             communication: scoreAndCommentSchema,
                             answering: scoreAndCommentSchema,
                             flow: scoreAndCommentSchema,
+                            technical: scoreAndCommentSchema,
                         },
-                        required: ['overall', 'communication', 'answering', 'flow']
+                        required: ['overall', 'communication', 'answering', 'flow', 'technical']
                     }
                 }
             });
@@ -247,11 +266,23 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
             transcriptListRef.current.scrollTop = transcriptListRef.current.scrollHeight;
         }
     }, [transcripts]);
+    
+    const formatTime = (seconds: number) => {
+        const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        return `${minutes}:${secs}`;
+    };
 
     return (
         <div className="flex flex-col md:flex-row h-screen bg-gray-900 text-white font-sans overflow-hidden">
             <div className="flex flex-col w-full md:w-1/2 lg:w-3/5 p-6 border-r border-gray-700">
-                <h2 className="text-2xl font-bold mb-4 text-cyan-400 flex-shrink-0">Interview Transcript</h2>
+                <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                    <h2 className="text-2xl font-bold text-cyan-400">Interview Transcript</h2>
+                    <div className="flex items-center gap-2 text-lg font-mono bg-gray-800 px-3 py-1 rounded-md">
+                        <ClockIcon className="w-5 h-5 text-gray-400" />
+                        <span>{formatTime(elapsedTime)}</span>
+                    </div>
+                </div>
                 <div ref={transcriptListRef} className="flex-grow space-y-6 overflow-y-auto pr-4">
                    {transcripts.map((t) => (
                        <div key={t.id} className={`flex items-start gap-4 ${t.speaker === 'user' ? 'justify-end' : ''}`}>
