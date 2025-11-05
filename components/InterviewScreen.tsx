@@ -286,6 +286,35 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
         return `${minutes}:${secs}`;
     };
 
+    const renderFeedbackPanel = () => {
+        if (status === INTERVIEW_STATUS.TRANSCRIBING) {
+            return (
+                <div className="bg-gray-800 rounded-lg p-6 flex items-center justify-center min-h-[18rem]">
+                    <Loader text="Transcribing your answer..." />
+                </div>
+            );
+        }
+        if (status === INTERVIEW_STATUS.ANALYZING) {
+            return <FeedbackCard isLoading={true} />;
+        }
+        if (currentFeedback) {
+            return <FeedbackCard feedback={currentFeedback} />;
+        }
+        if (isAiAnswering) { // This loader only shows if there's no feedback yet
+            return (
+                <div className="bg-gray-800 rounded-lg p-6 flex items-center justify-center min-h-[18rem]">
+                    <Loader text="Generating ideal answer..." />
+                </div>
+            );
+        }
+        // Default placeholder
+        return (
+            <div className="bg-gray-800 rounded-lg p-6 flex items-center justify-center min-h-[18rem] text-gray-500">
+                <p>{isRecording ? '...' : 'Your feedback will appear here.'}</p>
+            </div>
+        );
+    };
+
     return (
         <div className="flex flex-col md:flex-row h-screen bg-gray-900 text-white font-sans overflow-hidden">
             <div className="flex flex-col w-full md:w-1/2 lg:w-3/5 p-6 border-r border-gray-700">
@@ -318,29 +347,7 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
                     </div>
                     
                     <h2 className="text-xl font-bold text-cyan-400 mb-2">Feedback & Analysis</h2>
-                    {status === INTERVIEW_STATUS.TRANSCRIBING && (
-                        <div className="bg-gray-800 rounded-lg p-6 flex items-center justify-center min-h-[18rem]">
-                            <Loader text="Transcribing your answer..." />
-                        </div>
-                    )}
-                    {status === INTERVIEW_STATUS.ANALYZING && <FeedbackCard isLoading={true} />}
-                    {currentFeedback && !aiAnswer && <FeedbackCard feedback={currentFeedback} />}
-                    {isAiAnswering && !aiAnswer && (
-                        <div className="bg-gray-800 rounded-lg p-6 flex items-center justify-center min-h-[18rem]">
-                            <Loader text="Generating ideal answer..." />
-                        </div>
-                    )}
-                    {aiAnswer && (
-                        <div className="bg-gray-800 rounded-lg p-6 min-h-[18rem] text-gray-300">
-                            <h4 className="font-semibold text-cyan-400 mb-2 flex items-center gap-2"><SparklesIcon className="w-5 h-5"/> AI Generated Answer:</h4>
-                            <p className="whitespace-pre-wrap">{aiAnswer}</p>
-                        </div>
-                    )}
-                    {!currentFeedback && status !== INTERVIEW_STATUS.ANALYZING && status !== INTERVIEW_STATUS.TRANSCRIBING && !aiAnswer && !isAiAnswering && (
-                         <div className="bg-gray-800 rounded-lg p-6 flex items-center justify-center min-h-[18rem] text-gray-500">
-                            <p>{isRecording ? '...' : 'Your feedback will appear here.'}</p>
-                        </div>
-                    )}
+                    {renderFeedbackPanel()}
                 </div>
 
                 <div className="flex flex-col items-center space-y-4 pt-6 border-t border-gray-700 flex-shrink-0">
