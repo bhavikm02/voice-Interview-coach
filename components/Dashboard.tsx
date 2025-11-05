@@ -1,6 +1,6 @@
 import React from 'react';
 import type { InterviewResult, AverageScores, Transcript } from '../types';
-import { TrendingUpIcon, StarIcon, BotIcon, UserIcon } from './Icons';
+import { TrendingUpIcon, StarIcon, BotIcon, UserIcon, SparklesIcon } from './Icons';
 import FeedbackCard from './FeedbackCard';
 
 const TrendChart: React.FC<{ history: InterviewResult[] }> = ({ history }) => {
@@ -117,7 +117,7 @@ const InterviewReview: React.FC<{ transcripts: Transcript[] }> = ({ transcripts 
                     {answer && (
                       <div className="flex items-start gap-4 ml-8 pl-6 border-l-2 border-gray-700">
                         <div className="p-2 bg-gray-700 rounded-full mt-1">
-                          {answer.speaker === 'user' ? <UserIcon className="w-6 h-6 text-blue-400" /> : <StarIcon className="w-6 h-6 text-purple-400" />}
+                          {answer.speaker === 'user' ? <UserIcon className="w-6 h-6 text-blue-400" /> : <SparklesIcon className="w-6 h-6 text-purple-400" />}
                         </div>
                         <div className="flex-1">
                             <div className="bg-gray-900 p-4 rounded-lg mb-4">

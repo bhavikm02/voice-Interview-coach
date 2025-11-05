@@ -209,32 +209,45 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
     const handleAnswerByAi = async () => {
         setIsAiAnswering(true);
         setAiAnswer(null);
-        setCurrentFeedback(null);
-        setStatus('AI is generating an answer...');
+        // Don't clear feedback if it exists, so user can compare
+        if (!currentFeedback) {
+            setStatus('AI is generating an answer...');
+        } else {
+            setStatus('Generating ideal answer...');
+        }
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const question = questions[currentQuestionIndex];
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-pro',
-                contents: `You are a world-class expert in DevOps and Site Reliability Engineering, interviewing for a role at ${config.company || 'a top tech company'}. Provide an ideal, comprehensive, and well-structured answer to the following interview question: "${question}"`,
+                contents: `You are a world-class expert in DevOps and Site Reliability Engineering, interviewing for a role at ${config.company || 'a top tech company'}. Provide an ideal, comprehensive, and well-structured answer to the following interview question. The answer must be between 200 and 300 words. Question: "${question}"`,
             });
             const generatedAnswer = response.text;
             setAiAnswer(generatedAnswer);
             
-            const questionId = Date.now();
-            const answerId = questionId + 1;
-             setTranscripts(prev => [
-                ...prev.filter(t => t.questionIndex !== currentQuestionIndex),
-                { id: questionId, speaker: 'interviewer', text: question, questionIndex: currentQuestionIndex },
-                { id: answerId, speaker: 'system', text: generatedAnswer, questionIndex: currentQuestionIndex }
-            ]);
+            const questionTranscript = transcripts.find(t => t.questionIndex === currentQuestionIndex && t.speaker === 'interviewer');
+
+            const newTranscripts = [
+                ...transcripts.filter(t => !(t.questionIndex === currentQuestionIndex && t.speaker === 'system'))
+            ];
+            
+            if (!questionTranscript) {
+                 newTranscripts.push({ id: Date.now(), speaker: 'interviewer', text: question, questionIndex: currentQuestionIndex });
+            }
+            newTranscripts.push({ id: Date.now() + 1, speaker: 'system', text: generatedAnswer, questionIndex: currentQuestionIndex });
+
+            setTranscripts(newTranscripts);
 
         } catch (error) {
             console.error('AI answering error:', error);
             setAiAnswer('Sorry, I was unable to generate an answer.');
         } finally {
             setIsAiAnswering(false);
-            setStatus('Ready for the next question.');
+             if (!currentFeedback) {
+                setStatus('Ready for the next question.');
+            } else {
+                setStatus(INTERVIEW_STATUS.READY);
+            }
         }
     };
     
@@ -312,7 +325,7 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
                     )}
                     {status === INTERVIEW_STATUS.ANALYZING && <FeedbackCard isLoading={true} />}
                     {currentFeedback && !aiAnswer && <FeedbackCard feedback={currentFeedback} />}
-                    {isAiAnswering && (
+                    {isAiAnswering && !aiAnswer && (
                         <div className="bg-gray-800 rounded-lg p-6 flex items-center justify-center min-h-[18rem]">
                             <Loader text="Generating ideal answer..." />
                         </div>
@@ -335,7 +348,7 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
                     <div className="flex items-center justify-between w-full max-w-sm">
                         <button onClick={handlePrevQuestion} disabled={currentQuestionIndex === 0 || isRecording || isAiAnswering} className="p-4 bg-gray-700 rounded-full hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"><ChevronLeftIcon className="w-6 h-6"/></button>
                         
-                        <div className="flex items-center justify-center gap-4">
+                        <div className="flex items-center justify-center gap-4 min-h-[80px]">
                            {/* Ready to Answer */}
                            {!isRecording && !currentFeedback && !aiAnswer && (
                                 <>
@@ -359,16 +372,23 @@ const InterviewScreen: React.FC<{ config: InterviewConfig, questions: string[], 
                                 </button>
                            )}
 
-                           {/* Feedback Shown */}
-                           {currentFeedback && !isRecording && (
-                                <button onClick={handleRetry} className="flex items-center gap-2 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
-                                    <RetryIcon className="w-5 h-5"/> Retry
-                                </button>
+                           {/* Feedback Shown (user has answered) */}
+                            {currentFeedback && !isRecording && (
+                                <div className="flex items-center gap-4">
+                                    <button onClick={handleRetry} className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
+                                        <RetryIcon className="w-5 h-5"/> Retry
+                                    </button>
+                                    {!aiAnswer && (
+                                        <button onClick={handleAnswerByAi} disabled={isAiAnswering} className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition text-white font-bold rounded-lg" title="Get ideal answer">
+                                            <SparklesIcon className="w-5 h-5"/> Get Ideal Answer
+                                        </button>
+                                    )}
+                                </div>
                            )}
 
-                           {/* AI Answer Shown */}
-                           {aiAnswer && !isAiAnswering && (
-                                <div className="text-center h-20 flex items-center justify-center">
+                           {/* AI Answer Shown (and no user answer yet) */}
+                           {aiAnswer && !currentFeedback && !isRecording && !isAiAnswering && (
+                                <div className="text-center">
                                     <p className="text-green-400 font-semibold px-4">AI Answered</p>
                                 </div>
                            )}

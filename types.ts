@@ -1,11 +1,14 @@
 export type InterviewState = 'setup' | 'interviewing' | 'finished';
 export type QuestionSource = 'ai' | 'manual';
+export type Difficulty = 'Easy' | 'Intermediate' | 'Advanced';
 
 export interface InterviewConfig {
   company: string;
   role: string;
   questionSource: QuestionSource;
   manualQuestions: string;
+  topics?: string;
+  difficulty?: Difficulty;
 }
 
 export interface ScoreAndComment {

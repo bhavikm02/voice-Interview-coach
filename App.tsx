@@ -42,7 +42,12 @@ const App: React.FC = () => {
       try {
         // FIX: Removed `as string` from `process.env.API_KEY` as per coding guidelines.
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const prompt = `Generate 10 common DevOps and SRE interview questions specifically tailored for a company like ${config.company || 'Google'}. Focus on their known emphasis on distributed systems, scalability, and SRE principles. Include a mix of behavioral and technical questions. Return only a numbered list of questions, nothing else.`;
+        
+        let prompt = `Generate 10 ${config.difficulty || 'Intermediate'} level DevOps and SRE interview questions specifically tailored for a company like ${config.company || 'a top tech company'} and a role of ${config.role}. Focus on their known emphasis on distributed systems, scalability, and SRE principles.`;
+        if (config.topics && config.topics.trim() !== '') {
+          prompt += ` The questions should specifically cover the following topics: ${config.topics}.`;
+        }
+        prompt += ` Include a mix of behavioral and technical questions. Return only a numbered list of questions, nothing else.`;
         
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash',

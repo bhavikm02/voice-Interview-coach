@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import type { InterviewConfig, QuestionSource } from '../types';
+import type { InterviewConfig, QuestionSource, Difficulty } from '../types';
 import Loader from './Loader';
 import { ChevronRightIcon } from './Icons';
 
@@ -10,15 +9,17 @@ interface Props {
 }
 
 const InterviewSetup: React.FC<Props> = ({ onStart, isLoading }) => {
-  const [company, setCompany] = useState('Google');
+  const [company, setCompany] = useState('FIS Global FinTech');
   const [role, setRole] = useState('Senior SRE');
   const [questionSource, setQuestionSource] = useState<QuestionSource>('ai');
   const [manualQuestions, setManualQuestions] = useState('');
+  const [topics, setTopics] = useState('');
+  const [difficulty, setDifficulty] = useState<Difficulty>('Intermediate');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
-    onStart({ company, role, questionSource, manualQuestions });
+    onStart({ company, role, questionSource, manualQuestions, topics, difficulty });
   };
 
   return (
@@ -72,8 +73,40 @@ const InterviewSetup: React.FC<Props> = ({ onStart, isLoading }) => {
             </button>
           </div>
 
+          {questionSource === 'ai' && (
+            <div className="animate-fade-in space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty Level</label>
+                <div className="flex rounded-lg bg-gray-700 p-1">
+                  {(['Easy', 'Intermediate', 'Advanced'] as Difficulty[]).map(d => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDifficulty(d)}
+                      className={`w-1/3 py-2.5 rounded-md text-sm font-medium transition ${difficulty === d ? 'bg-cyan-500 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label htmlFor="topics" className="block text-sm font-medium text-gray-300 mb-2">Key Topics (Optional)</label>
+                <textarea
+                  id="topics"
+                  value={topics}
+                  onChange={(e) => setTopics(e.target.value)}
+                  placeholder="e.g., Kubernetes, CI/CD, Terraform, Observability..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                />
+                <p className="text-xs text-gray-500 mt-1">Provide comma-separated topics to tailor the AI questions.</p>
+              </div>
+            </div>
+          )}
+
           {questionSource === 'manual' && (
-            <div>
+            <div className="animate-fade-in">
               <label htmlFor="manualQuestions" className="block text-sm font-medium text-gray-300 mb-2">Your Questions</label>
               <textarea
                 id="manualQuestions"
